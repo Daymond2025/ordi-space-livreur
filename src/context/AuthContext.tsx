@@ -22,6 +22,13 @@ export type DonneesInscription = {
   telephone: string;
   password: string;
   password_confirmation: string;
+  // Décision PDG : le livreur manipule l'argent du client à la livraison —
+  // ces 4 pièces sont exigées dès l'inscription (pas une étape ultérieure
+  // optionnelle) pour pouvoir l'identifier formellement en cas de vol/litige.
+  photo: File;
+  photo_permis: File;
+  photo_cni: File;
+  photo_carte_grise: File;
 };
 
 type AuthContextValue = {
@@ -105,12 +112,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * fixé côté client, pas un choix laissé à l'utilisateur de cette app.
    */
   async function register(donnees: DonneesInscription) {
-    // Pas de device_name ici : AuthController::register() nomme le jeton
-    // d'après le User-Agent de la requête, pas un champ du corps.
-    const reponse = await apiFetch<SessionResult>("/auth/register", {
-      method: "POST",
-      body: { ...donnees, type_utilisateur: "livreur" },
-    });
+    // FormData (pas de JSON) : les 4 documents obligatoires sont de vrais
+    // fichiers — voir RegisterRequest côté backend. Pas de device_name ici :
+    // AuthController::register() nomme le jeton d'après le User-Agent de la
+    // requête, pas un champ du corps.
+    const formData = new FormData();
+    formData.append("nom", donnees.nom);
+    if (donnees.prenom) formData.append("prenom", donnees.prenom);
+    formData.append("email", donnees.email);
+    formData.append("telephone", donnees.telephone);
+    formData.append("password", donnees.password);
+    formData.append("password_confirmation", donnees.password_confirmation);
+    formData.append("type_utilisateur", "livreur");
+    formData.append("photo", donnees.photo);
+    formData.append("photo_permis", donnees.photo_permis);
+    formData.append("photo_cni", donnees.photo_cni);
+    formData.append("photo_carte_grise", donnees.photo_carte_grise);
+
+    const reponse = await apiFetch<SessionResult>("/auth/register", { method: "POST", body: formData });
 
     accesRefuseSiRoleInvalide(reponse.user);
     memoriser(reponse);

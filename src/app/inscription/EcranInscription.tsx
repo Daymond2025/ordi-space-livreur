@@ -7,6 +7,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { ApiRequestError } from "@/lib/api";
 import { ChampAuth } from "@/components/auth/ChampAuth";
+import { ChampDocument } from "@/components/auth/ChampDocument";
 import { BoutonAuthCompact } from "@/components/auth/BoutonAuthCompact";
 
 /**
@@ -26,6 +27,11 @@ export function EcranInscription() {
   const [email, setEmail] = useState("");
   const [motDePasse, setMotDePasse] = useState("");
   const [confirmationMotDePasse, setConfirmationMotDePasse] = useState("");
+  const [photo, setPhoto] = useState<File | null>(null);
+  const [photoPermis, setPhotoPermis] = useState<File | null>(null);
+  const [photoCni, setPhotoCni] = useState<File | null>(null);
+  const [photoCarteGrise, setPhotoCarteGrise] = useState<File | null>(null);
+  const [erreursDocuments, setErreursDocuments] = useState<Record<string, string>>({});
   const [erreur, setErreur] = useState<string | null>(null);
   const [chargement, setChargement] = useState(false);
 
@@ -33,9 +39,27 @@ export function EcranInscription() {
     if (pret && user) router.replace("/");
   }, [pret, user, router]);
 
+  // Efface l'erreur d'un document dès qu'il est choisi — sinon le contour
+  // rouge et le message restent affichés jusqu'à la prochaine soumission,
+  // alors que le champ est déjà valide.
+  function choisirDocument(champ: string, setter: (fichier: File | null) => void) {
+    return (fichier: File | null) => {
+      setter(fichier);
+      if (fichier) {
+        setErreursDocuments((erreurs) => {
+          if (!(champ in erreurs)) return erreurs;
+          const reste = { ...erreurs };
+          delete reste[champ];
+          return reste;
+        });
+      }
+    };
+  }
+
   async function onSoumettre(event: FormEvent) {
     event.preventDefault();
     setErreur(null);
+    setErreursDocuments({});
 
     if (!nom.trim() || !telephone.trim() || !email.trim() || !motDePasse) {
       setErreur("Remplis tous les champs obligatoires.");
@@ -44,6 +68,20 @@ export function EcranInscription() {
 
     if (motDePasse !== confirmationMotDePasse) {
       setErreur("Les mots de passe ne correspondent pas.");
+      return;
+    }
+
+    // Décision PDG : le livreur manipule l'argent du client à la livraison —
+    // ces 4 documents sont obligatoires dès l'inscription (voir
+    // RegisterRequest côté backend), pas une étape ultérieure optionnelle.
+    const documentsManquants: Record<string, string> = {};
+    if (!photo) documentsManquants.photo = "Photo de profil requise.";
+    if (!photoPermis) documentsManquants.photo_permis = "Photo du permis requise.";
+    if (!photoCni) documentsManquants.photo_cni = "Photo de la CNI requise.";
+    if (!photoCarteGrise) documentsManquants.photo_carte_grise = "Photo de la carte grise requise.";
+    if (Object.keys(documentsManquants).length > 0) {
+      setErreursDocuments(documentsManquants);
+      setErreur("Ajoute les documents manquants pour continuer.");
       return;
     }
 
@@ -56,8 +94,21 @@ export function EcranInscription() {
         email,
         password: motDePasse,
         password_confirmation: confirmationMotDePasse,
+        photo: photo as File,
+        photo_permis: photoPermis as File,
+        photo_cni: photoCni as File,
+        photo_carte_grise: photoCarteGrise as File,
       });
     } catch (e) {
+      if (e instanceof ApiRequestError && e.fields) {
+        const champsDocuments = ["photo", "photo_permis", "photo_cni", "photo_carte_grise"];
+        const documentsEnErreur: Record<string, string> = {};
+        for (const champ of champsDocuments) {
+          if (e.fields[champ]?.[0]) documentsEnErreur[champ] = e.fields[champ][0];
+        }
+        if (Object.keys(documentsEnErreur).length > 0) setErreursDocuments(documentsEnErreur);
+      }
+
       // Formulaire à plusieurs champs (contrairement à la connexion, qui n'a
       // qu'une seule cause d'erreur possible) : on affiche le premier message
       // de champ renvoyé par la validation quand il existe, plus précis que
@@ -105,11 +156,45 @@ export function EcranInscription() {
             onChange={setConfirmationMotDePasse}
             placeholder="Confirmer le mot de passe"
             autoComplete="new-password"
-            erreur={erreur ?? undefined}
           />
         </div>
 
-        <BoutonAuthCompact chargement={chargement} texteChargement="Création…" className="mt-8">
+        <h2 className="mt-8 text-center text-lg font-bold text-brand-ink">Tes documents</h2>
+        <p className="mt-1.5 text-center text-xs text-brand-muted">
+          Requis pour vérifier ton identité, puisque tu géreras de l&apos;argent en espèces à la livraison.
+        </p>
+
+        <div className="mt-4 flex flex-col gap-2.5">
+          <ChampDocument
+            label="Photo de profil"
+            fichier={photo}
+            onChange={choisirDocument("photo", setPhoto)}
+            erreur={erreursDocuments.photo}
+          />
+          <ChampDocument
+            label="Permis de conduire"
+            fichier={photoPermis}
+            onChange={choisirDocument("photo_permis", setPhotoPermis)}
+            erreur={erreursDocuments.photo_permis}
+          />
+          <ChampDocument
+            label="Carte d'identité (CNI)"
+            fichier={photoCni}
+            onChange={choisirDocument("photo_cni", setPhotoCni)}
+            erreur={erreursDocuments.photo_cni}
+          />
+          <ChampDocument
+            label="Carte grise"
+            sousLabel="Du véhicule que tu utiliseras"
+            fichier={photoCarteGrise}
+            onChange={choisirDocument("photo_carte_grise", setPhotoCarteGrise)}
+            erreur={erreursDocuments.photo_carte_grise}
+          />
+        </div>
+
+        {erreur ? <p className="mt-4 text-center text-xs text-rose-500">{erreur}</p> : null}
+
+        <BoutonAuthCompact chargement={chargement} texteChargement="Création…" className="mt-6">
           créer mon compte
         </BoutonAuthCompact>
 
