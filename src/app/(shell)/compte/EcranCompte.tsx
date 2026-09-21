@@ -192,7 +192,7 @@ export function EcranCompte() {
             className="absolute"
             style={{ top: 5, left: 6, width: 40, height: 40 }}
           >
-            <Image src="/images/boutique.png" alt="" width={40} height={40} />
+            <Image src="/images/boutique.png" alt="" width={40} height={40} className="brightness-0 invert" />
           </button>
           <span className="absolute right-0 top-0 h-3 w-3 rounded-full bg-red-500 ring-2 ring-white" />
         </div>

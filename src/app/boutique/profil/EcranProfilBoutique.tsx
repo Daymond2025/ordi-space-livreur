@@ -7,11 +7,12 @@ import type { ReactNode } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { apiFetch } from "@/lib/api";
 import { genererAffichePdf } from "@/lib/affichePdf";
-import type { SupportOrdiSpace } from "@/lib/types";
+import type { FournisseurLivreur, SupportOrdiSpace } from "@/lib/types";
 import { formaterMontantPoints, type ProfilBoutique } from "@/lib/ventesBoutique";
 import { ChevronLeftIcon, CopyIcon, ImprimanteIcon, LienChaineIcon, PinIcon, ShareIcon, UserIcon } from "@/components/icons";
 import { PopupLienAffilie } from "@/components/boutique/PopupLienAffilie";
 import { CarteCoordinateur } from "@/components/compte/CarteCoordinateur";
+import { CarteFournisseur } from "@/components/compte/CarteFournisseur";
 import { CarteConfidentialite, CarteSupportWhatsApp } from "@/components/compte/CartesAide";
 import { DEGRADE_BLEU } from "@/components/boutique/style";
 
@@ -76,13 +77,18 @@ function phraseCommission(min: number | null, max: number | null): ReactNode {
  * nom + téléphone du livreur — aucun produit ni prix, l'affiche ne se périme
  * pas. Sous l'affiche : "Ton coordinateur" (absente tant que le livreur n'a
  * aucune mission), "Support Partenaire WhatsApp" (numéro fixé par l'Admin,
- * GET /support) et "Confidentialité et UGC" (pas encore branchée).
+ * GET /support) et "Confidentialité et UGC" (pas encore branchée). "Ton
+ * coordinateur" y reste compacte (nom + contact) ; les fournisseurs des
+ * produits du livreur (GET /boutique/fournisseurs) ont chacun leur carte, avec
+ * adresse, horaires et itinéraire. Toucher la photo de profil ramène au compte
+ * principal.
  */
 export function EcranProfilBoutique() {
   const router = useRouter();
   const { token } = useAuth();
   const [profil, setProfil] = useState<ProfilBoutique | null>(null);
   const [support, setSupport] = useState<SupportOrdiSpace | null>(null);
+  const [fournisseurs, setFournisseurs] = useState<FournisseurLivreur[]>([]);
   const [erreur, setErreur] = useState(false);
   const [qr, setQr] = useState<string | null>(null);
   const [copie, setCopie] = useState(false);
@@ -106,6 +112,13 @@ export function EcranProfilBoutique() {
     apiFetch<SupportOrdiSpace>("/support", { token })
       .then((donnees) => {
         if (!annule) setSupport(donnees);
+      })
+      .catch(() => {});
+
+    // Idem : sans produit lié à un fournisseur, aucune carte fournisseur.
+    apiFetch<FournisseurLivreur[]>("/boutique/fournisseurs", { token })
+      .then((donnees) => {
+        if (!annule) setFournisseurs(donnees);
       })
       .catch(() => {});
 
@@ -191,7 +204,10 @@ export function EcranProfilBoutique() {
         </button>
 
         <div className="absolute inset-x-0 top-[58px] z-20 flex items-start justify-center gap-3 px-4">
-          <div
+          <button
+            type="button"
+            onClick={() => router.push("/compte")}
+            aria-label="Voir mon compte"
             className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-[22px] border-[3px] border-white bg-[#EAF3FF] text-[color:var(--brand-blue-end)]"
             style={{ boxShadow: "0px 4px 10px 0px rgba(0, 0, 0, 0.2)" }}
           >
@@ -201,7 +217,7 @@ export function EcranProfilBoutique() {
             ) : (
               <UserIcon className="h-9 w-9" />
             )}
-          </div>
+          </button>
           <div className="min-w-0 pt-2 text-white">
             <p className="truncate text-2xl font-extrabold leading-tight">{nomComplet}</p>
             <p className="text-[13px] font-semibold leading-tight">{profil?.livreur.telephone}</p>
@@ -323,7 +339,10 @@ export function EcranProfilBoutique() {
           </div>
 
           <div className="mx-[30px] mb-8 flex shrink-0 flex-col gap-3.5">
-            <CarteCoordinateur coordinateur={profil.coordinateur} />
+            <CarteCoordinateur coordinateur={profil.coordinateur} compacte />
+            {fournisseurs.map((fournisseur) => (
+              <CarteFournisseur key={fournisseur.user_id} fournisseur={fournisseur} />
+            ))}
             <CarteSupportWhatsApp whatsappUrl={support?.whatsapp_url ?? null} />
             <CarteConfidentialite />
           </div>

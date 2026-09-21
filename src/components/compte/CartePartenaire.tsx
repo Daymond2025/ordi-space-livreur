@@ -61,6 +61,7 @@ export function CartePartenaire({
   telephone,
   whatsappUrl,
   lignes = [],
+  action,
 }: {
   logo: ReactNode;
   nom: string;
@@ -68,6 +69,8 @@ export function CartePartenaire({
   telephone: string | null;
   whatsappUrl: string | null;
   lignes?: LignePartenaire[];
+  /** Bouton pleine largeur sous les lignes (ex. "Itinéraire vers le fournisseur"). */
+  action?: { libelle: string; href: string };
 }) {
   return (
     <div className="rounded-[28px] bg-white px-[19px] pb-3 pt-[21px]" style={{ boxShadow: OMBRE }}>
@@ -96,6 +99,18 @@ export function CartePartenaire({
             <Ligne key={l.label} icone={l.icone} label={l.label} valeur={l.valeur} />
           ))}
       </div>
+
+      {action ? (
+        <a
+          href={action.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mb-1 mt-2 flex h-11 items-center justify-center rounded-xl text-[13px] font-extrabold text-white"
+          style={{ background: "linear-gradient(90deg, #0077FF 0%, #00BFFF 100%)" }}
+        >
+          {action.libelle}
+        </a>
+      ) : null}
     </div>
   );
 }

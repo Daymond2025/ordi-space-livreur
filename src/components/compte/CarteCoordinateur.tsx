@@ -3,12 +3,21 @@ import { HorlogeIcon, MapIcon, PinIcon, UserIcon } from "@/components/icons";
 import { CartePartenaire } from "@/components/compte/CartePartenaire";
 
 /**
- * Carte "Ton coordinateur" (Mes infos et Profil boutique) : la fiche du
- * coordinateur qui gère les missions du livreur — voir
- * Coordinateur::fichePourLivreur() côté backend. Sans coordinateur (aucune
- * mission confiée), rien n'est affiché.
+ * Carte "Ton coordinateur" : la fiche du coordinateur qui gère les missions du
+ * livreur — voir Coordinateur::fichePourLivreur() côté backend. Sans
+ * coordinateur (aucune mission confiée), rien n'est affiché.
+ *
+ * `compacte` (profil Boutique) : nom et téléphone seulement, sans adresse,
+ * horaires ni zone couverte — le livreur n'y a besoin que de le joindre.
+ * "Mes infos" garde la fiche complète.
  */
-export function CarteCoordinateur({ coordinateur }: { coordinateur: CoordinateurLivreur | null | undefined }) {
+export function CarteCoordinateur({
+  coordinateur,
+  compacte = false,
+}: {
+  coordinateur: CoordinateurLivreur | null | undefined;
+  compacte?: boolean;
+}) {
   if (!coordinateur) return null;
 
   return (
@@ -25,11 +34,15 @@ export function CarteCoordinateur({ coordinateur }: { coordinateur: Coordinateur
       sousTitre="Ton coordinateur"
       telephone={coordinateur.telephone}
       whatsappUrl={coordinateur.whatsapp_url}
-      lignes={[
-        { icone: PinIcon, label: "Adresse", valeur: coordinateur.adresse },
-        { icone: HorlogeIcon, label: "Horaires", valeur: coordinateur.horaires },
-        { icone: MapIcon, label: "Zone couverte", valeur: coordinateur.zone_couverte },
-      ]}
+      lignes={
+        compacte
+          ? []
+          : [
+              { icone: PinIcon, label: "Adresse", valeur: coordinateur.adresse },
+              { icone: HorlogeIcon, label: "Horaires", valeur: coordinateur.horaires },
+              { icone: MapIcon, label: "Zone couverte", valeur: coordinateur.zone_couverte },
+            ]
+      }
     />
   );
 }

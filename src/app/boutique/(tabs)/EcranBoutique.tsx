@@ -4,15 +4,14 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { apiFetch } from "@/lib/api";
-import { formaterPrix, type Pagination } from "@/lib/types";
+import type { Pagination } from "@/lib/types";
 import type { ResumePortefeuille } from "@/lib/portefeuille";
 import { formaterMontantPoints } from "@/lib/ventesBoutique";
-import { categorieBoutique, LIBELLE_ETAT_PRODUIT, resumerSpecs, type ProduitBoutique } from "@/lib/produitsBoutique";
-import { BellIcon, ChevronLeftIcon, ChevronRightIcon, ImageIcon, WalletIcon } from "@/components/icons";
-import { PopupLienAffilie } from "@/components/boutique/PopupLienAffilie";
+import { categorieBoutique, type ProduitBoutique } from "@/lib/produitsBoutique";
+import { BellIcon, ChevronLeftIcon, ChevronRightIcon, WalletIcon } from "@/components/icons";
+import { GrilleProduitsBoutique } from "@/components/boutique/GrilleProduitsBoutique";
 
 const DEGRADE_HEADER = "linear-gradient(90deg, #0077FF 0%, #00BFFF 100%)";
-const COULEUR_BOUTON_VENDRE = "rgba(255, 151, 0, 1)";
 
 const CATEGORIES = [
   { id: "tout", label: "Tout" },
@@ -21,105 +20,20 @@ const CATEGORIES = [
   { id: "logiciels", label: "Logiciels" },
 ] as const;
 
-function CarteProduitBoutique({
-  produit,
-  chargement,
-  onVendre,
-  onOuvrir,
-}: {
-  produit: ProduitBoutique;
-  chargement: boolean;
-  onVendre: () => void;
-  onOuvrir: () => void;
-}) {
-  const specs = resumerSpecs(produit);
-  const image = produit.images[0]?.url_image;
-
-  return (
-    <div className="flex flex-col overflow-hidden rounded-2xl bg-white" style={{ boxShadow: "0px 1px 1px 0px rgba(0, 0, 0, 0.25)" }}>
-      <button type="button" onClick={onOuvrir} className="relative h-28 w-full text-left">
-        {image ? (
-          // eslint-disable-next-line @next/next/no-img-element -- domaine backend dynamique (dev/prod), pas de config next/image nécessaire ici
-          <img src={image} alt="" className="h-full w-full object-cover" />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-[#F2F5FA] text-brand-muted">
-            <ImageIcon className="h-6 w-6" />
-          </div>
-        )}
-        {produit.etat_produit ? (
-          <span className="absolute left-2 top-2 rounded-md bg-amber-400 px-1.5 py-0.5 text-[9px] font-extrabold text-white">
-            {LIBELLE_ETAT_PRODUIT[produit.etat_produit]}
-          </span>
-        ) : null}
-        {produit.pourcentage_reduction ? (
-          <span className="absolute right-2 top-2 rounded-md bg-orange-500 px-1.5 py-0.5 text-[9px] font-extrabold text-white">
-            -{produit.pourcentage_reduction}%
-          </span>
-        ) : null}
-      </button>
-
-      <div className="flex flex-col gap-1.5 p-2.5">
-        <button type="button" onClick={onOuvrir} className="text-left">
-          <p className="line-clamp-2 text-xs font-extrabold leading-tight text-brand-ink">{produit.nom_produit}</p>
-        </button>
-
-        {specs.length > 0 ? (
-          <div className="flex flex-wrap gap-1">
-            {specs.map((spec) => (
-              <span key={spec} className="rounded bg-[#F2F5FA] px-1.5 py-0.5 text-[9px] font-semibold text-brand-muted">
-                {spec}
-              </span>
-            ))}
-          </div>
-        ) : null}
-
-        <div className="flex items-baseline gap-1.5">
-          <p className="text-sm font-extrabold text-brand-ink">
-            {produit.prix_vente ? `${formaterPrix(produit.prix_vente)} CFA` : "Prix à venir"}
-          </p>
-          {produit.prix_barre ? (
-            <p className="text-[10px] text-brand-muted line-through">{formaterPrix(produit.prix_barre)}</p>
-          ) : null}
-        </div>
-
-        <div className="flex items-center justify-between rounded-lg bg-amber-50 px-2 py-1">
-          <span className="text-[9px] font-bold text-amber-700">Commission</span>
-          <span className="text-xs font-extrabold text-amber-700">
-            {produit.commission_revente ? `${formaterPrix(produit.commission_revente)} CFA` : "—"}
-          </span>
-        </div>
-
-        <button
-          type="button"
-          onClick={onVendre}
-          disabled={chargement}
-          className="mt-0.5 w-full text-[11px] font-extrabold text-white disabled:opacity-60"
-          style={{ height: 30, borderRadius: 5, background: COULEUR_BOUTON_VENDRE }}
-        >
-          {chargement ? "…" : "Vendre ce produit"}
-        </button>
-      </div>
-    </div>
-  );
-}
-
 /**
  * "Boutique" — accessible depuis l'icône boutique de "Mon Profil". Le
  * livreur revend de vrais produits publiés par Fournisseur/Coordinateur/
  * Admin (GET /produits, public) en échange de la commission renseignée sur
  * chaque produit (`commission_revente`) — seuls les produits où ce champ est
  * renseigné apparaissent ici, les autres ne sont pas ouverts à la revente.
- * "Vendre ce produit" génère le lien affilié réel
- * (POST /boutique/produits/{id}/lien) et l'affiche dans une pop-up
- * Copier/Partager ; taper la carte ouvre le détail produit.
+ * Les cartes (vente par lien, détail) sont celles de GrilleProduitsBoutique ;
+ * le filtre détaillé (marque, RAM…) est l'onglet "Catégorie".
  */
 export function EcranBoutique() {
   const router = useRouter();
   const { token } = useAuth();
   const [categorie, setCategorie] = useState<(typeof CATEGORIES)[number]["id"]>("tout");
   const [produits, setProduits] = useState<ProduitBoutique[] | null>(null);
-  const [chargementCarteId, setChargementCarteId] = useState<number | null>(null);
-  const [lienActif, setLienActif] = useState<string | null>(null);
   const [resume, setResume] = useState<ResumePortefeuille | null>(null);
 
   // Commission disponible de l'en-tête : le même solde que sur "Portefeuille".
@@ -141,22 +55,6 @@ export function EcranBoutique() {
       .then((page) => setProduits(page.data.filter((p) => p.commission_revente !== null)))
       .catch(() => setProduits([]));
   }, [token]);
-
-  async function onVendre(produit: ProduitBoutique) {
-    if (!token || chargementCarteId) return;
-    setChargementCarteId(produit.id);
-    try {
-      const reponse = await apiFetch<{ code: string; url: string }>(`/boutique/produits/${produit.id}/lien`, {
-        method: "POST",
-        token,
-      });
-      setLienActif(reponse.url);
-    } catch {
-      // Silencieux : le livreur peut simplement retenter.
-    } finally {
-      setChargementCarteId(null);
-    }
-  }
 
   const produitsFiltres = produits?.filter((p) => categorie === "tout" || categorieBoutique(p.categorie?.nom_categorie) === categorie);
 
@@ -219,20 +117,8 @@ export function EcranBoutique() {
       ) : produitsFiltres.length === 0 ? (
         <p className="py-10 text-center text-sm text-brand-muted">Aucun produit à revendre dans cette catégorie.</p>
       ) : (
-        <div className="grid grid-cols-2 gap-3 px-4 pb-24 pt-4">
-          {produitsFiltres.map((produit) => (
-            <CarteProduitBoutique
-              key={produit.id}
-              produit={produit}
-              chargement={chargementCarteId === produit.id}
-              onVendre={() => onVendre(produit)}
-              onOuvrir={() => router.push(`/boutique/produits/${produit.id}`)}
-            />
-          ))}
-        </div>
+        <GrilleProduitsBoutique produits={produitsFiltres} />
       )}
-
-      {lienActif ? <PopupLienAffilie url={lienActif} onFermer={() => setLienActif(null)} /> : null}
     </div>
   );
 }

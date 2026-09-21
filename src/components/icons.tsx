@@ -149,6 +149,16 @@ export function CloseIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+/** Deux flèches en boucle — "réinitialiser" (écran Filtres). */
+export function RefreshIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M20 11a8 8 0 0 0-14.3-4.5L4 8.5M4 4v4.5h4.5" />
+      <path d="M4 13a8 8 0 0 0 14.3 4.5l1.7-2M20 20v-4.5h-4.5" />
+    </svg>
+  );
+}
+
 /** Écran "Comment paye le client ?" — pictogramme Mobile Money. */
 export function QrCodeIcon(props: SVGProps<SVGSVGElement>) {
   return (

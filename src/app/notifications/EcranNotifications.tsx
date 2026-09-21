@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { apiFetch } from "@/lib/api";
-import { formaterDateRelative, type NotificationLivreur, type Pagination } from "@/lib/types";
-import { BellIcon, BoxIcon, ChevronLeftIcon, CheckCircleIcon } from "@/components/icons";
+import { formaterDateHeure, formaterDateRelative, type NotificationLivreur, type Pagination } from "@/lib/types";
+import { BellIcon, BoxIcon, ChevronLeftIcon, CheckCircleIcon, CloseIcon } from "@/components/icons";
 import { useRefetchOnFocus } from "@/lib/useRefetchOnFocus";
 
 const DEGRADE_HEADER = "linear-gradient(90deg, #0077FF 0%, #00BFFF 100%)";
@@ -26,26 +26,69 @@ function iconePourType(type: string): { icone: React.ReactNode; classe: string }
   }
 }
 
-function CarteNotification({ notification, onLue }: { notification: NotificationLivreur; onLue: (id: number) => void }) {
+function CarteNotification({ notification, onOuvrir }: { notification: NotificationLivreur; onOuvrir: (notification: NotificationLivreur) => void }) {
   const { icone, classe } = iconePourType(notification.type_notification);
 
   return (
     <button
       type="button"
-      onClick={() => !notification.lu && onLue(notification.id)}
+      onClick={() => onOuvrir(notification)}
       className="flex w-full items-start gap-3 rounded-2xl bg-white p-3.5 text-left"
       style={{ boxShadow: "0px 1px 1px 0px rgba(0, 0, 0, 0.25)" }}
     >
       <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${classe}`}>{icone}</span>
       <div className="min-w-0 flex-1">
         <p className="text-sm font-extrabold text-brand-ink">{notification.titre ?? "Notification"}</p>
-        <p className="mt-0.5 text-xs leading-snug text-brand-muted">{notification.contenu}</p>
+        <p className="mt-0.5 line-clamp-2 text-xs leading-snug text-brand-muted">{notification.contenu}</p>
         <p className="mt-1.5 text-[10px] font-semibold uppercase tracking-wide text-brand-muted/70">
           {formaterDateRelative(notification.date_envoi)}
         </p>
       </div>
       {!notification.lu ? <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-[color:var(--brand-blue-end)]" /> : null}
     </button>
+  );
+}
+
+/**
+ * Détail d'une notification : le texte en entier, en gros caractères — la carte
+ * de la liste n'en montre que les deux premières lignes.
+ */
+function DetailNotification({ notification, onFermer }: { notification: NotificationLivreur; onFermer: () => void }) {
+  const { icone, classe } = iconePourType(notification.type_notification);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50" onClick={onFermer}>
+      <div
+        className="relative max-h-[85dvh] w-full max-w-xl overflow-y-auto rounded-t-[28px] bg-white px-5 pb-6 pt-5"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-label={notification.titre ?? "Notification"}
+      >
+        <button
+          type="button"
+          onClick={onFermer}
+          aria-label="Fermer"
+          className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-[#F2F5FA] text-brand-ink"
+        >
+          <CloseIcon className="h-4 w-4" />
+        </button>
+
+        <span className={`flex h-11 w-11 items-center justify-center rounded-2xl ${classe}`}>{icone}</span>
+        <h2 className="mt-3 pr-10 text-xl font-extrabold leading-tight text-brand-ink">{notification.titre ?? "Notification"}</h2>
+        <p className="mt-1 text-xs font-semibold text-brand-muted">{formaterDateHeure(notification.date_envoi)}</p>
+
+        <p className="mt-4 whitespace-pre-line text-base leading-relaxed text-brand-ink">{notification.contenu}</p>
+
+        <button
+          type="button"
+          onClick={onFermer}
+          className="mt-6 h-12 w-full rounded-xl text-sm font-extrabold text-white"
+          style={{ background: DEGRADE_HEADER }}
+        >
+          Fermer
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -60,6 +103,7 @@ export function EcranNotifications() {
   const { token } = useAuth();
   const router = useRouter();
   const [notifications, setNotifications] = useState<NotificationLivreur[] | null>(null);
+  const [ouverte, setOuverte] = useState<NotificationLivreur | null>(null);
 
   function recharger() {
     if (!token) return;
@@ -79,6 +123,12 @@ export function EcranNotifications() {
     } catch {
       setNotifications((liste) => liste?.map((n) => (n.id === id ? { ...n, lu: false } : n)) ?? liste);
     }
+  }
+
+  /** Ouvre le détail et, si elle était non lue, la marque comme lue. */
+  function onOuvrir(notification: NotificationLivreur) {
+    setOuverte({ ...notification, lu: true });
+    if (!notification.lu) void onMarquerLue(notification.id);
   }
 
   const nonLues = notifications?.filter((n) => !n.lu) ?? [];
@@ -117,7 +167,7 @@ export function EcranNotifications() {
           <div className="flex flex-col gap-2.5">
             <p className="text-xs font-extrabold uppercase tracking-wide text-brand-muted">Non lues</p>
             {nonLues.map((notification) => (
-              <CarteNotification key={notification.id} notification={notification} onLue={onMarquerLue} />
+              <CarteNotification key={notification.id} notification={notification} onOuvrir={onOuvrir} />
             ))}
           </div>
         ) : null}
@@ -126,11 +176,13 @@ export function EcranNotifications() {
           <div className="flex flex-col gap-2.5">
             <p className="text-xs font-extrabold uppercase tracking-wide text-brand-muted">Lues</p>
             {lues.map((notification) => (
-              <CarteNotification key={notification.id} notification={notification} onLue={onMarquerLue} />
+              <CarteNotification key={notification.id} notification={notification} onOuvrir={onOuvrir} />
             ))}
           </div>
         ) : null}
       </div>
+
+      {ouverte ? <DetailNotification notification={ouverte} onFermer={() => setOuverte(null)} /> : null}
     </div>
   );
 }

@@ -5,11 +5,10 @@ import { useEffect, useState } from "react";
 import type { ComponentType, SVGProps } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { apiFetch } from "@/lib/api";
-import { formaterPrix } from "@/lib/types";
+import { formaterPrix, type FournisseurLivreur } from "@/lib/types";
 import { LIBELLE_ETAT_PRODUIT, resumerSpecs, type ProduitBoutique } from "@/lib/produitsBoutique";
 import {
   CarteGraphiqueIcon,
-  CartIcon,
   CheckIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -24,7 +23,10 @@ import {
   ShareIcon,
   TruckIcon,
 } from "@/components/icons";
+import { FormulaireCommandeLivreur } from "@/components/boutique/FormulaireCommandeLivreur";
 import { PopupLienAffilie } from "@/components/boutique/PopupLienAffilie";
+import { VisionneuseImages } from "@/components/boutique/VisionneuseImages";
+import { CarteFournisseur } from "@/components/compte/CarteFournisseur";
 
 const ONGLETS = [
   { id: "cadeaux", label: "Les cadeaux" },
@@ -38,12 +40,15 @@ const OMBRE_CARTE = "0px 1px 2px 0px rgba(0, 0, 0, 0.05)";
 
 /**
  * "Détails" — ouvert en tapant une carte produit sur "Boutique". Branché sur
- * GET /produits/{id} (public, même donnée que le catalogue principal). Le
- * lien affilié réel (POST /boutique/produits/{id}/lien, même endpoint que
- * "Vendre ce produit" sur la liste) alimente : "Je passe la commande"
- * (pop-up Copier/Partager), l'icône Partager de l'en-tête (partage natif,
- * pop-up en repli) et la tuile Copier de la barre du bas. Le panier n'est
- * pas encore câblé.
+ * GET /produits/{id} (public, même donnée que le catalogue principal).
+ * - "Je passe la commande" ouvre le formulaire de saisie d'une commande pour un
+ *   client (POST /boutique/commandes) — elle part à l'Admin ;
+ * - le lien affilié (POST /boutique/produits/{id}/lien, même endpoint que
+ *   "Vendre ce produit" sur la liste) alimente l'icône Partager de l'en-tête
+ *   (partage natif, pop-up en repli) et la tuile Copier de la barre du bas ;
+ * - toucher la photo l'ouvre en grand ;
+ * - la carte "Fournisseur" (GET /boutique/produits/{id}/fournisseur) aide le
+ *   livreur à joindre et trouver le fournisseur du produit.
  */
 export function EcranDetailProduit({ produitBoutiqueId }: { produitBoutiqueId: number }) {
   const router = useRouter();
@@ -54,11 +59,28 @@ export function EcranDetailProduit({ produitBoutiqueId }: { produitBoutiqueId: n
   const [chargementLien, setChargementLien] = useState(false);
   const [lienActif, setLienActif] = useState<string | null>(null);
   const [lienCopie, setLienCopie] = useState(false);
+  const [commandeOuverte, setCommandeOuverte] = useState(false);
+  const [visionneuseOuverte, setVisionneuseOuverte] = useState(false);
+  const [fournisseur, setFournisseur] = useState<FournisseurLivreur | null>(null);
 
   useEffect(() => {
     apiFetch<ProduitBoutique>(`/produits/${produitBoutiqueId}`, { token: token ?? undefined })
       .then(setProduit)
       .catch(() => setProduit(null));
+  }, [produitBoutiqueId, token]);
+
+  // Fiche du fournisseur : facultative — sans elle (ou si l'appel échoue), la carte n'apparaît pas.
+  useEffect(() => {
+    if (!token) return;
+    let annule = false;
+    apiFetch<{ fournisseur: FournisseurLivreur | null }>(`/boutique/produits/${produitBoutiqueId}/fournisseur`, { token })
+      .then((reponse) => {
+        if (!annule) setFournisseur(reponse.fournisseur);
+      })
+      .catch(() => {});
+    return () => {
+      annule = true;
+    };
   }, [produitBoutiqueId, token]);
 
   /** Récupère (ou crée) le lien affilié du livreur pour ce produit. `null` si l'appel échoue. */
@@ -77,11 +99,6 @@ export function EcranDetailProduit({ produitBoutiqueId }: { produitBoutiqueId: n
     } finally {
       setChargementLien(false);
     }
-  }
-
-  async function onVendre() {
-    const url = await obtenirLien();
-    if (url) setLienActif(url);
   }
 
   async function onPartager() {
@@ -164,23 +181,20 @@ export function EcranDetailProduit({ produitBoutiqueId }: { produitBoutiqueId: n
           >
             <ShareIcon className="h-4 w-4" />
           </button>
-          <button
-            type="button"
-            aria-label="Panier"
-            className="relative flex h-9 w-9 items-center justify-center rounded-full bg-orange-50 text-orange-500"
-          >
-            <CartIcon className="h-4.5 w-4.5" />
-            <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-extrabold text-white ring-2 ring-white">
-              3
-            </span>
-          </button>
         </div>
       </div>
 
       <div className="relative h-[320px] w-full shrink-0 bg-[#F2F5FA]">
         {produit.images[imageActive] ? (
-          // eslint-disable-next-line @next/next/no-img-element -- domaine backend dynamique, pas de config next/image nécessaire ici
-          <img src={produit.images[imageActive].url_image} alt="" className="h-full w-full object-cover" />
+          <button
+            type="button"
+            onClick={() => setVisionneuseOuverte(true)}
+            aria-label="Voir la photo en grand"
+            className="block h-full w-full cursor-zoom-in"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element -- domaine backend dynamique, pas de config next/image nécessaire ici */}
+            <img src={produit.images[imageActive].url_image} alt="" className="h-full w-full object-cover" />
+          </button>
         ) : (
           <div className="flex h-full w-full items-center justify-center text-brand-muted">
             <ImageIcon className="h-10 w-10" />
@@ -248,24 +262,25 @@ export function EcranDetailProduit({ produitBoutiqueId }: { produitBoutiqueId: n
         {specs.length > 0 ? <p className="text-xs text-brand-muted">{specs.join(" • ")}</p> : null}
 
         <div
-          className="mt-2 flex min-h-[58px] items-center justify-between rounded-lg px-3 py-2"
+          className="mt-2 flex min-h-[58px] flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-lg px-3 py-2"
           style={{ background: "rgba(242, 243, 255, 0.6)" }}
         >
-          <div>
-            <p className="text-[10px] text-brand-muted">Prix de vente</p>
-            <div className="mt-0.5 flex items-baseline gap-2">
-              <p className="text-lg font-extrabold text-orange-600">
-                {produit.prix_vente ? `${formaterPrix(produit.prix_vente)} FCFA` : "Prix à venir"}
+          {/* Un montant ne se coupe jamais : espace insécable avant "FCFA" + nowrap. Seuls les blocs entiers peuvent passer à la ligne. */}
+          <div className="shrink-0">
+            <p className="whitespace-nowrap text-[10px] text-brand-muted">Prix de vente</p>
+            <div className="mt-0.5 flex items-baseline gap-2 whitespace-nowrap">
+              <p className="text-[17px] font-extrabold text-orange-600">
+                {produit.prix_vente ? `${formaterPrix(produit.prix_vente)}\u00a0FCFA` : "Prix à venir"}
               </p>
               {produit.prix_barre ? (
-                <p className="text-xs text-brand-muted line-through">{formaterPrix(produit.prix_barre)} FCFA</p>
+                <p className="text-[11px] text-brand-muted line-through">{formaterPrix(produit.prix_barre)}&nbsp;FCFA</p>
               ) : null}
             </div>
           </div>
           {produit.prix_barre && produit.prix_vente ? (
-            <span className="flex items-center gap-1 rounded-full bg-orange-100 px-2 py-1 text-[10px] font-bold text-orange-600">
-              <span className="h-1.5 w-1.5 rounded-full bg-orange-500" /> Économie{" "}
-              {formaterPrix(Number(produit.prix_barre) - Number(produit.prix_vente))} F
+            <span className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-orange-100 px-2 py-1 text-[10px] font-bold text-orange-600">
+              <span className="h-1.5 w-1.5 rounded-full bg-orange-500" /> Économie&nbsp;
+              {formaterPrix(Number(produit.prix_barre) - Number(produit.prix_vente))}&nbsp;F
             </span>
           ) : null}
         </div>
@@ -279,9 +294,9 @@ export function EcranDetailProduit({ produitBoutiqueId }: { produitBoutiqueId: n
             className="absolute left-[5px] top-1 h-[42px] w-1 rounded-md"
             style={{ background: "rgba(255, 119, 0, 1)" }}
           />
-          <span className="text-lg font-light text-orange-700">Commission</span>
-          <span className="text-lg font-extrabold text-orange-600">
-            {produit.commission_revente ? `${formaterPrix(produit.commission_revente)} FCFA` : "—"}
+          <span className="whitespace-nowrap text-lg font-light text-orange-700">Commission</span>
+          <span className="whitespace-nowrap text-lg font-extrabold text-orange-600">
+            {produit.commission_revente ? `${formaterPrix(produit.commission_revente)}\u00a0FCFA` : "—"}
           </span>
         </div>
       </div>
@@ -343,7 +358,7 @@ export function EcranDetailProduit({ produitBoutiqueId }: { produitBoutiqueId: n
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-extrabold text-brand-ink">Livraison</p>
                 <p className="mt-0.5 text-xs text-brand-muted">
-                  À partir de {formaterPrix(fraisLivraisonMin)} FCFA — selon ta localité
+                  À partir de {formaterPrix(fraisLivraisonMin)}&nbsp;FCFA — selon ta localité
                 </p>
               </div>
             </div>
@@ -367,8 +382,14 @@ export function EcranDetailProduit({ produitBoutiqueId }: { produitBoutiqueId: n
           ) : null}
         </div>
       ) : (
-        <div className="h-6 shrink-0" />
+        <div className="h-3.5 shrink-0" />
       )}
+
+      {fournisseur ? (
+        <div className="mx-[11px] mb-6 shrink-0">
+          <CarteFournisseur fournisseur={fournisseur} />
+        </div>
+      ) : null}
 
       <div
         className="sticky bottom-0 z-20 mt-auto flex h-[110px] shrink-0 items-start gap-[21px] rounded-t-[23px] bg-white px-[22px] pt-[25px]"
@@ -376,24 +397,16 @@ export function EcranDetailProduit({ produitBoutiqueId }: { produitBoutiqueId: n
       >
         <button
           type="button"
-          aria-label="Panier"
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-orange-500"
-          style={{ background: "rgba(255, 244, 229, 1)", boxShadow: OMBRE_CARTE }}
-        >
-          <CartIcon className="h-5 w-5" />
-        </button>
-        <button
-          type="button"
-          onClick={onVendre}
-          disabled={chargementLien}
+          onClick={() => setCommandeOuverte(true)}
+          disabled={produit.quantite_stock <= 0 || produit.commission_revente === null}
           className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl text-sm font-extrabold text-white disabled:opacity-60"
           style={{
             background: "linear-gradient(90deg, #FBBF24 0%, #F97316 100%)",
             boxShadow: "0px 2px 4px -2px rgba(255, 151, 0, 0.2)",
           }}
         >
-          {chargementLien ? "…" : "Je passe la commande"}
-          {chargementLien ? null : <ChevronRightIcon className="h-4 w-4" />}
+          {produit.quantite_stock <= 0 ? "Rupture de stock" : "Je passe la commande"}
+          <ChevronRightIcon className="h-4 w-4" />
         </button>
         <button
           type="button"
@@ -408,6 +421,14 @@ export function EcranDetailProduit({ produitBoutiqueId }: { produitBoutiqueId: n
       </div>
 
       {lienActif ? <PopupLienAffilie url={lienActif} onFermer={() => setLienActif(null)} /> : null}
+      {commandeOuverte ? <FormulaireCommandeLivreur produit={produit} onFermer={() => setCommandeOuverte(false)} /> : null}
+      {visionneuseOuverte ? (
+        <VisionneuseImages
+          images={produit.images.map((image) => image.url_image)}
+          indexInitial={imageActive}
+          onFermer={() => setVisionneuseOuverte(false)}
+        />
+      ) : null}
     </div>
   );
 }

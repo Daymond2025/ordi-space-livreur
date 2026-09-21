@@ -218,3 +218,18 @@ export function formaterTelephone(brut: string): string {
   if (!correspondance) return brut;
   return `+225 ${correspondance[1].replace(/(\d{2})(?=\d)/g, "$1 ")}`;
 }
+
+/** Fiche d'un fournisseur pour le livreur (Fournisseur::fichePourLivreur()) — jamais de données financières. */
+export type FournisseurLivreur = {
+  user_id: number;
+  nom_entreprise: string | null;
+  nom_gerant: string | null;
+  telephone: string | null;
+  whatsapp_url: string | null;
+  contact_pro: string | null;
+  adresse: string | null;
+  horaires: string | null;
+  zone_couverte: string | null;
+  lien_maps: string | null;
+  photo: string | null;
+};
