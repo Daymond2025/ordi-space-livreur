@@ -44,7 +44,8 @@ function LigneMenu({ icone, iconeClasse, label, onClick }: { icone: React.ReactN
  * type_vehicule (générique, ex. "Moto") — aucun champ marque/modèle/plaque
  * n'existe côté backend pour l'instant. Les 3 liens du bas ("Mes documents",
  * "Confidentialité et UGC", "Contactez le service") et le bouton haut-droit
- * ne sont pas encore branchés (aucun écran cible construit).
+ * ne sont pas encore branchés (aucun écran cible construit). Taper la photo
+ * ouvre "Mes infos" (/mes-infos) ; l'appareil photo, lui, change la photo.
  */
 export function EcranCompte() {
   const { user, token, logout } = useAuth();
@@ -184,14 +185,27 @@ export function EcranCompte() {
             border: "1px solid rgba(255, 255, 255, 0.72)",
           }}
         >
-          <button type="button" aria-label="Boutique" className="absolute" style={{ top: 5, left: 6, width: 40, height: 40 }}>
+          <button
+            type="button"
+            aria-label="Boutique"
+            onClick={() => router.push("/boutique")}
+            className="absolute"
+            style={{ top: 5, left: 6, width: 40, height: 40 }}
+          >
             <Image src="/images/boutique.png" alt="" width={40} height={40} />
           </button>
           <span className="absolute right-0 top-0 h-3 w-3 rounded-full bg-red-500 ring-2 ring-white" />
         </div>
 
         <div
-          className="absolute z-10 overflow-hidden"
+          role="button"
+          tabIndex={0}
+          aria-label="Voir mes infos"
+          onClick={() => router.push("/mes-infos")}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") router.push("/mes-infos");
+          }}
+          className="absolute z-10 cursor-pointer overflow-hidden"
           style={{
             top: 72,
             left: 57,
@@ -215,7 +229,10 @@ export function EcranCompte() {
           </div>
           <button
             type="button"
-            onClick={() => inputPhotoRef.current?.click()}
+            onClick={(e) => {
+              e.stopPropagation();
+              inputPhotoRef.current?.click();
+            }}
             disabled={chargementPhoto}
             aria-label="Modifier la photo de profil"
             className="absolute flex h-6 w-6 items-center justify-center rounded-full bg-[color:var(--brand-blue-end)] text-white ring-2 ring-white disabled:opacity-60"

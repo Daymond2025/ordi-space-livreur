@@ -153,7 +153,28 @@ export type ProfilLivreur = {
   photo: string | null;
   disponible: boolean;
   type_vehicule: string | null;
+  zone_couverture: string | null;
+  /** Coordinateur qui a validé sa dernière mission — null tant qu'il n'en a aucune. */
+  coordinateur: CoordinateurLivreur | null;
   created_at: string;
+};
+
+/** Fiche du coordinateur d'un livreur (MoiController::coordinateurDuLivreur()). */
+export type CoordinateurLivreur = {
+  nom: string;
+  photo: string | null;
+  telephone: string | null;
+  whatsapp_url: string | null;
+  adresse: string | null;
+  horaires: string | null;
+  zone_couverte: string | null;
+};
+
+/** Support Ordi'Space, numéro fixé par l'Admin (GET /support). `telephone` est null tant qu'il n'est pas réglé. */
+export type SupportOrdiSpace = {
+  nom: string;
+  telephone: string | null;
+  whatsapp_url: string | null;
 };
 
 /** Options possibles pour Livreur.type_vehicule (voir TYPES_VEHICULE_LIVREUR côté backend). */
@@ -189,3 +210,11 @@ export type SuiviEntree = {
   date_heure: string;
   donnees: SuiviDonnees | null;
 };
+
+/** "+2250711623197" → "+225 07 11 62 31 97" ; tout autre format est laissé tel quel. */
+export function formaterTelephone(brut: string): string {
+  const chiffres = brut.replace(/[^\d+]/g, "");
+  const correspondance = /^\+225(\d{10})$/.exec(chiffres);
+  if (!correspondance) return brut;
+  return `+225 ${correspondance[1].replace(/(\d{2})(?=\d)/g, "$1 ")}`;
+}

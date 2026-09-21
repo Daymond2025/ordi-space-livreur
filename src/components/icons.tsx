@@ -343,6 +343,70 @@ export function TricycleIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+/** Badge vidéo sur l'image produit — écran "Détails". */
+export function PlayIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+      <path d="M8 5.5v13l11-6.5-11-6.5Z" />
+    </svg>
+  );
+}
+
+/** Bouton panier flottant — écran "Boutique". */
+export function CartIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.4a2 2 0 0 0 2-1.6L20.5 8H6" />
+      <circle cx="9.5" cy="20" r="1.3" fill="currentColor" stroke="none" />
+      <circle cx="17" cy="20" r="1.3" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+/** Pop-up lien affilié — bouton "Copier le lien". */
+export function CopyIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <rect x="8.5" y="8.5" width="12" height="12" rx="2" />
+      <path d="M15.5 8.5V6a1.5 1.5 0 0 0-1.5-1.5H5.5A1.5 1.5 0 0 0 4 6v8.5A1.5 1.5 0 0 0 5.5 16H8" />
+    </svg>
+  );
+}
+
+/** Pop-up lien affilié — tuile "Copier". */
+export function EclairBicoloreIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" {...props}>
+      <path d="M14 2 5 13.5h5.5L9 22l10-11.5h-5.5L14 2Z" fill="#0077FF" />
+      <path d="M9 22l1.5-8.5H6L11 7l-1 6.5h4.5L9 22Z" fill="#FACC15" />
+    </svg>
+  );
+}
+
+/** Pop-up lien affilié — bouton "Partager". */
+export function ShareIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <circle cx="18" cy="5.5" r="2.5" />
+      <circle cx="6" cy="12" r="2.5" />
+      <circle cx="18" cy="18.5" r="2.5" />
+      <path d="m8.3 10.7 7.4-3.4M8.3 13.3l7.4 3.4" />
+    </svg>
+  );
+}
+
+/** Nav "Boutique" — onglets Catégorie/Ventes/Profil. */
+export function GridIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1.8" />
+      <rect x="13" y="3.5" width="7.5" height="7.5" rx="1.8" />
+      <rect x="3.5" y="13" width="7.5" height="7.5" rx="1.8" />
+      <rect x="13" y="13" width="7.5" height="7.5" rx="1.8" />
+    </svg>
+  );
+}
+
 /** Menu "Contactez le service" sur "Mon Profil". */
 export function HeadsetIcon(props: SVGProps<SVGSVGElement>) {
   return (
@@ -351,6 +415,159 @@ export function HeadsetIcon(props: SVGProps<SVGSVGElement>) {
       <rect x="3" y="13" width="4" height="6" rx="1.5" />
       <rect x="17" y="13" width="4" height="6" rx="1.5" />
       <path d="M19 19v1a2 2 0 0 1-2 2h-3" />
+    </svg>
+  );
+}
+
+/** Pictos des tuiles de caractéristiques — fiche produit "Boutique". */
+export function ProcesseurIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <rect x="6" y="6" width="12" height="12" rx="2" />
+      <rect x="9.5" y="9.5" width="5" height="5" rx="0.8" />
+      <path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3" />
+    </svg>
+  );
+}
+
+export function DisqueIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <rect x="3" y="5" width="18" height="14" rx="2.5" />
+      <path d="M3 14h18" />
+      <path d="M7 16.5h.01M10 16.5h.01" />
+    </svg>
+  );
+}
+
+export function MemoireIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <rect x="2.5" y="7" width="19" height="9" rx="1.5" />
+      <path d="M6 10v3M10 10v3M14 10v3M18 10v3" />
+      <path d="M5 16v2.5M9 16v2.5M13 16v2.5M17 16v2.5" />
+    </svg>
+  );
+}
+
+export function CarteGraphiqueIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <rect x="2.5" y="6.5" width="19" height="10" rx="2" />
+      <circle cx="9" cy="11.5" r="2.5" />
+      <path d="M15 10h3.5M15 13h3.5" />
+      <path d="M5 16.5v2M9 16.5v2" />
+    </svg>
+  );
+}
+
+export function EcranIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <rect x="3" y="4.5" width="18" height="12" rx="2" />
+      <path d="M8 20h8M12 16.5V20" />
+    </svg>
+  );
+}
+
+export function FenetresIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+      <path d="M3 5.6 10.5 4.5v6.7H3V5.6Zm8.7-1.3L21 3v8.2h-9.3V4.3ZM3 12.8h7.5v6.7L3 18.4v-5.6Zm8.7 0H21V21l-9.3-1.3v-6.9Z" />
+    </svg>
+  );
+}
+
+/** Engrenage — pastille "Garantie" de la fiche produit "Boutique". */
+export function EngrenageIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" />
+    </svg>
+  );
+}
+
+/** Source de vente "Commande manuelle" — écran "Centre des ventes". */
+export function PresspapiersIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <rect x="5" y="4.5" width="14" height="17" rx="2.5" />
+      <path d="M9 4.5V4a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 4v.5" />
+      <path d="M9 11h6M9 15h4" />
+    </svg>
+  );
+}
+
+/** Source de vente "Lien WhatsApp" — écran "Centre des ventes". */
+export function BulleMessageIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v9a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 4v-4A2.5 2.5 0 0 1 4 14.5v-9Z" />
+      <path d="M8.5 8.5h7M8.5 12h4" />
+    </svg>
+  );
+}
+
+/** Client d'une vente — écran "Centre des ventes". */
+export function UtilisateurCocheIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <circle cx="9.5" cy="8" r="3.8" />
+      <path d="M2.5 20c.4-3.6 3.2-6 7-6s6.6 2.4 7 6" />
+      <path d="m16.5 10.5 2 2 3.7-4" />
+    </svg>
+  );
+}
+
+/** Tuile "Mon Lien de vente" — onglet Profil de la Boutique. */
+export function LienChaineIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M10 13.5a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1" />
+      <path d="M14 10.5a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" />
+    </svg>
+  );
+}
+
+/** Bouton "Télécharger A4" — onglet Profil de la Boutique. */
+export function ImprimanteIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M7 9V3.5h10V9" />
+      <rect x="3" y="9" width="18" height="8" rx="2" />
+      <rect x="7" y="14" width="10" height="6.5" rx="1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+/** Bouton "Se déconnecter" — écran "Mes infos". */
+export function DeconnexionIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M9 4H6.5A2.5 2.5 0 0 0 4 6.5v11A2.5 2.5 0 0 0 6.5 20H9" />
+      <path d="M15 8l4 4-4 4M19 12H9" />
+    </svg>
+  );
+}
+
+/** Menu "⋮" en haut à droite — écran "Mes infos". */
+export function PlusVerticalIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+      <circle cx="12" cy="5" r="2" />
+      <circle cx="12" cy="12" r="2" />
+      <circle cx="12" cy="19" r="2" />
+    </svg>
+  );
+}
+
+/** Ligne "Horaires" — carte partenaire de "Mes infos". */
+export function HorlogeIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 7.5V12l3 2" />
     </svg>
   );
 }

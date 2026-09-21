@@ -7,11 +7,22 @@ const API_ORIGIN = new URL(API_URL).origin;
 // jamais en production, où le bundle ne l'utilise pas.
 const scriptSrc = process.env.NODE_ENV === "development" ? "'self' 'unsafe-inline' 'unsafe-eval'" : "'self' 'unsafe-inline'";
 
+// Les images produit sont servies par le backend Laravel via son propre
+// APP_URL (Storage::disk('public')->url()) — en dev local, ça peut être
+// "localhost" même quand NEXT_PUBLIC_API_URL (donc API_ORIGIN) pointe
+// "127.0.0.1", ou l'inverse. On whiteliste les deux alias de boucle locale
+// uniquement en dev pour ne pas dépendre d'un alignement manuel entre les
+// deux .env — jamais en production, où API_ORIGIN seul doit suffire.
+const imgOrigins =
+  process.env.NODE_ENV === "development"
+    ? Array.from(new Set([API_ORIGIN, "http://127.0.0.1:8000", "http://localhost:8000"]))
+    : [API_ORIGIN];
+
 const CSP = [
   "default-src 'self'",
   `script-src ${scriptSrc}`,
   "style-src 'self' 'unsafe-inline'",
-  `img-src 'self' data: ${API_ORIGIN}`,
+  `img-src 'self' data: ${imgOrigins.join(" ")}`,
   "font-src 'self' data:",
   `connect-src 'self' ${API_ORIGIN}`,
   "frame-ancestors 'none'",
