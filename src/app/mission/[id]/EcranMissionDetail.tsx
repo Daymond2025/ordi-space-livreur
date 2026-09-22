@@ -14,6 +14,7 @@ import { EcranItineraireRecuperation } from "./EcranItineraireRecuperation";
 import { EcranCommencerLivraison } from "./EcranCommencerLivraison";
 import { EcranSuiviLivraison } from "./EcranSuiviLivraison";
 import { EcranModePaiement } from "./EcranModePaiement";
+import { lienWebSur } from "@/lib/liens";
 
 /**
  * Détail d'une mission — chaîne d'écrans pilotée par de vrais statuts
@@ -258,9 +259,9 @@ export function EcranMissionDetail({ livraisonId }: { livraisonId: number }) {
             </div>
           ) : null}
 
-          {mission.lien_maps_destination ? (
+          {lienWebSur(mission.lien_maps_destination) ? (
             <a
-              href={mission.lien_maps_destination}
+              href={lienWebSur(mission.lien_maps_destination) ?? undefined}
               target="_blank"
               rel="noreferrer"
               className="mt-3 flex h-11 items-center justify-center gap-2 rounded-[12px] border-2 border-[color:var(--brand-blue-end)] text-sm font-bold text-[color:var(--brand-blue-end)]"

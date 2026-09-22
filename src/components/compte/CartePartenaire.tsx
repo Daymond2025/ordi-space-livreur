@@ -1,5 +1,6 @@
 import type { ComponentType, ReactNode, SVGProps } from "react";
 import { PhoneFilledIcon, WhatsappIcon } from "@/components/icons";
+import { lienWebSur } from "@/lib/liens";
 
 type Icone = ComponentType<SVGProps<SVGSVGElement>>;
 
@@ -100,9 +101,9 @@ export function CartePartenaire({
           ))}
       </div>
 
-      {action ? (
+      {action && lienWebSur(action.href) ? (
         <a
-          href={action.href}
+          href={lienWebSur(action.href) ?? undefined}
           target="_blank"
           rel="noopener noreferrer"
           className="mb-1 mt-2 flex h-11 items-center justify-center rounded-xl text-[13px] font-extrabold text-white"

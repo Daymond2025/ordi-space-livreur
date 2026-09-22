@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { apiFetch } from "@/lib/api";
 import type { MissionLivreur, Pagination } from "@/lib/types";
+import { lienWebSur } from "@/lib/liens";
 import { MapIcon, PinIcon } from "@/components/icons";
 
 /**
@@ -55,9 +56,9 @@ export function EcranItineraire() {
               <PinIcon className="h-3 w-3 shrink-0" /> {missionActive.zone_destination ?? "—"}
             </p>
 
-            {missionActive.lien_maps_destination ? (
+            {lienWebSur(missionActive.lien_maps_destination) ? (
               <a
-                href={missionActive.lien_maps_destination}
+                href={lienWebSur(missionActive.lien_maps_destination) ?? undefined}
                 target="_blank"
                 rel="noreferrer"
                 className="bg-gradient-brand-blue mt-4 flex h-12 items-center justify-center gap-2 rounded-[14px] text-sm font-bold text-white"

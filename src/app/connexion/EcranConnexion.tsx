@@ -185,6 +185,10 @@ export function EcranConnexion() {
           />
         </div>
 
+        <Link href="/mot-de-passe-oublie" className="mt-3 text-center text-xs font-semibold text-brand-muted underline underline-offset-2">
+          Mot de passe oublié ?
+        </Link>
+
         <div className="flex-1" />
 
         <BoutonAuthCompact chargement={chargement} texteChargement="Vérification…" className="mt-10">
