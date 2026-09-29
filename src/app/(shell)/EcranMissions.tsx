@@ -11,6 +11,7 @@ import { BellIcon, LongArrowRightIcon, UserIcon } from "@/components/icons";
 import { InterrupteurDisponibilite } from "@/components/space/InterrupteurDisponibilite";
 import { useRefetchOnFocus } from "@/lib/useRefetchOnFocus";
 import { useCompteARebours } from "@/lib/useCompteARebours";
+import { sAbonnerAuxPush } from "@/lib/push";
 
 const DEGRADE_HEADER = "linear-gradient(90deg, #0077FF 0%, #00BFFF 100%)";
 
@@ -285,6 +286,12 @@ export function EcranMissions() {
     setProfil((p) => (p ? { ...p, disponible: valeur } : p));
     try {
       await apiFetch("/moi/disponibilite", { method: "PATCH", token, body: { disponible: valeur } });
+      // Moment naturel pour demander la permission de notification : le
+      // livreur vient de dire explicitement "je suis dispo, je veux des
+      // missions" — voir PushNotificationService::envoyerAuxLivreursDisponibles()
+      // côté backend (déclenché quand un fournisseur envoie une commande à
+      // un livreur). Échec silencieux, jamais bloquant.
+      if (valeur) sAbonnerAuxPush(token);
     } catch {
       setProfil((p) => (p ? { ...p, disponible: !valeur } : p));
     } finally {
