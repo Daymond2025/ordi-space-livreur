@@ -296,7 +296,7 @@ export function EcranDetailProduit({ produitBoutiqueId }: { produitBoutiqueId: n
           />
           <span className="whitespace-nowrap text-lg font-light text-orange-700">Commission</span>
           <span className="whitespace-nowrap text-lg font-extrabold text-orange-600">
-            {produit.commission_revente ? `${formaterPrix(produit.commission_revente)}\u00a0FCFA` : "—"}
+            {produit.commission_apporteur ? `${formaterPrix(produit.commission_apporteur)}\u00a0FCFA` : "—"}
           </span>
         </div>
       </div>
@@ -398,7 +398,7 @@ export function EcranDetailProduit({ produitBoutiqueId }: { produitBoutiqueId: n
         <button
           type="button"
           onClick={() => setCommandeOuverte(true)}
-          disabled={produit.quantite_stock <= 0 || produit.commission_revente === null}
+          disabled={produit.quantite_stock <= 0 || produit.commission_apporteur === null}
           className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl text-sm font-extrabold text-white disabled:opacity-60"
           style={{
             background: "linear-gradient(90deg, #FBBF24 0%, #F97316 100%)",

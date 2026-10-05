@@ -75,7 +75,7 @@ function CarteProduitBoutique({
         <div className="flex items-center justify-between rounded-lg bg-amber-50 px-2 py-1">
           <span className="text-[9px] font-bold text-amber-700">Commission</span>
           <span className="text-xs font-extrabold text-amber-700">
-            {produit.commission_revente ? `${formaterPrix(produit.commission_revente)} CFA` : "—"}
+            {produit.commission_apporteur ? `${formaterPrix(produit.commission_apporteur)} CFA` : "—"}
           </span>
         </div>
 

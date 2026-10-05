@@ -24,8 +24,10 @@ const CATEGORIES = [
  * "Boutique" — accessible depuis l'icône boutique de "Mon Profil". Le
  * livreur revend de vrais produits publiés par Fournisseur/Coordinateur/
  * Admin (GET /produits, public) en échange de la commission renseignée sur
- * chaque produit (`commission_revente`) — seuls les produits où ce champ est
- * renseigné apparaissent ici, les autres ne sont pas ouverts à la revente.
+ * chaque produit (`commission_apporteur` — le livreur a rejoint le
+ * maintenancier comme "apporteur d'affaire", retour du PDG) — seuls les
+ * produits où ce champ est renseigné apparaissent ici, les autres ne sont
+ * pas ouverts à la revente.
  * Les cartes (vente par lien, détail) sont celles de GrilleProduitsBoutique ;
  * le filtre détaillé (marque, RAM…) est l'onglet "Catégorie".
  */
@@ -52,7 +54,7 @@ export function EcranBoutique() {
 
   useEffect(() => {
     apiFetch<Pagination<ProduitBoutique>>("/produits?per_page=50", { token: token ?? undefined })
-      .then((page) => setProduits(page.data.filter((p) => p.commission_revente !== null)))
+      .then((page) => setProduits(page.data.filter((p) => p.commission_apporteur !== null)))
       .catch(() => setProduits([]));
   }, [token]);
 

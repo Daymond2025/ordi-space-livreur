@@ -1,8 +1,11 @@
 /**
  * "Boutique" — types alignés sur la vraie forme de GET /produits (public,
  * voir ProduitController::index()/show()) et non plus des données
- * d'illustration : seuls les produits avec un `commission_revente` renseigné
- * (voir StoreProduitRequest) sont proposés à la revente par le livreur.
+ * d'illustration : seuls les produits avec un `commission_apporteur`
+ * renseigné sont proposés à la revente par le livreur. Le livreur a rejoint
+ * le maintenancier comme "apporteur d'affaire" (retour du PDG) : plus de
+ * commission de revente qui lui soit propre, c'est la même commission_apporteur
+ * que tout autre apporteur — voir VenteBoutique::enregistrer() côté backend.
  */
 export type ImageProduit = {
   id: number;
@@ -32,7 +35,7 @@ export type ProduitBoutique = {
   prix_vente: string | null;
   prix_barre: string | null;
   pourcentage_reduction: number | null;
-  commission_revente: string | null;
+  commission_apporteur: string | null;
   etat_produit: EtatProduit | null;
   quantite_stock: number;
   duree_garantie_mois: number | null;
