@@ -93,7 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function login(email: string, password: string) {
     const reponse = await apiFetch<SessionResult | { requires_2fa: true; user_id: number }>("/auth/login", {
       method: "POST",
-      body: { email, password, device_name: NOM_APPAREIL },
+      body: { email, password, device_name: NOM_APPAREIL, type_utilisateur: "livreur" },
     });
 
     if ("requires_2fa" in reponse) {
