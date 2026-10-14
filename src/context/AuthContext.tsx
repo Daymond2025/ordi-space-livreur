@@ -31,15 +31,32 @@ export type DonneesInscription = {
   photo_carte_grise: File;
 };
 
+type DemandeOtpResultat = { compteExistant: boolean; userId?: number; codeDebug?: string };
+type InscriptionTelephoneResultat = { userId: number; codeDebug?: string };
+
 type AuthContextValue = {
   user: Utilisateur | null;
   token: string | null;
   pret: boolean;
   demandeOtpUserId: number | null;
+  /** @deprecated Conservé pour les comptes déjà créés par e-mail/mot de passe — voir /connexion/email. */
   login: (email: string, password: string) => Promise<void>;
+  /** @deprecated Plus utilisé par aucun écran — les nouvelles inscriptions passent par inscrireParTelephone(). */
   register: (donnees: DonneesInscription) => Promise<void>;
+  /** @deprecated 2FA après mot de passe (voir /connexion/email) — distinct de verifierOtpInscription(), qui prend un user_id explicite. */
   verifierOtp: (code: string) => Promise<void>;
   annulerOtp: () => void;
+  demanderOtp: (telephone: string) => Promise<DemandeOtpResultat>;
+  inscrireParTelephone: (
+    telephone: string,
+    nom: string,
+    prenom: string | undefined,
+    photo: File,
+    photoPermis: File,
+    photoCni: File,
+    photoCarteGrise: File
+  ) => Promise<InscriptionTelephoneResultat>;
+  verifierOtpInscription: (userId: number, code: string) => Promise<void>;
   logout: () => Promise<void>;
 };
 
@@ -161,8 +178,60 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(STOCKAGE_CLE);
   }
 
+  /** Étape 1 de la connexion/inscription par téléphone — voir Api\Auth\TelephoneAuthController::demanderOtp(). */
+  async function demanderOtp(telephone: string): Promise<DemandeOtpResultat> {
+    const reponse = await apiFetch<{ compte_existant: boolean; user_id?: number; code_debug?: string }>(
+      "/auth/telephone/otp",
+      { method: "POST", body: { telephone, type_utilisateur: "livreur" } }
+    );
+
+    return { compteExistant: reponse.compte_existant, userId: reponse.user_id, codeDebug: reponse.code_debug };
+  }
+
+  /**
+   * Numéro inconnu à l'étape précédente — crée le compte (voir
+   * TelephoneAuthController::inscrire()). FormData obligatoire : les 4
+   * documents sont de vrais fichiers, comme pour register() ci-dessus.
+   */
+  async function inscrireParTelephone(
+    telephone: string,
+    nom: string,
+    prenom: string | undefined,
+    photo: File,
+    photoPermis: File,
+    photoCni: File,
+    photoCarteGrise: File
+  ): Promise<InscriptionTelephoneResultat> {
+    const formData = new FormData();
+    formData.append("telephone", telephone);
+    formData.append("nom", nom);
+    if (prenom) formData.append("prenom", prenom);
+    formData.append("type_utilisateur", "livreur");
+    formData.append("photo", photo);
+    formData.append("photo_permis", photoPermis);
+    formData.append("photo_cni", photoCni);
+    formData.append("photo_carte_grise", photoCarteGrise);
+
+    const reponse = await apiFetch<{ user_id: number; code_debug?: string }>("/auth/telephone/inscription", { method: "POST", body: formData });
+
+    return { userId: reponse.user_id, codeDebug: reponse.code_debug };
+  }
+
+  /** Dernière étape, commune aux deux chemins ci-dessus — code reçu par WhatsApp. */
+  async function verifierOtpInscription(userId: number, code: string) {
+    const reponse = await apiFetch<SessionResult>("/auth/verify-otp", {
+      method: "POST",
+      body: { user_id: userId, code, device_name: NOM_APPAREIL },
+    });
+
+    accesRefuseSiRoleInvalide(reponse.user);
+    memoriser(reponse);
+  }
+
   return (
-    <AuthContext.Provider value={{ user, token, pret, demandeOtpUserId, login, register, verifierOtp, annulerOtp, logout }}>
+    <AuthContext.Provider
+      value={{ user, token, pret, demandeOtpUserId, login, register, verifierOtp, annulerOtp, demanderOtp, inscrireParTelephone, verifierOtpInscription, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );

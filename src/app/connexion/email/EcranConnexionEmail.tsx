@@ -14,7 +14,12 @@ import { ChevronLeftIcon } from "@/components/icons";
 // Doit correspondre à OTP_LONGUEUR côté backend (app/Helpers/const.php).
 const LONGUEUR_CODE = 6;
 
-export function EcranConnexion() {
+/**
+ * Connexion par e-mail + mot de passe (avec 2FA) — repli pour les comptes
+ * créés avant le passage au téléphone+OTP (voir /connexion, désormais
+ * l'écran principal).
+ */
+export function EcranConnexionEmail() {
   const { user, pret, demandeOtpUserId, login, verifierOtp, annulerOtp } = useAuth();
   const router = useRouter();
 
@@ -195,8 +200,8 @@ export function EcranConnexion() {
           connexion
         </BoutonAuthCompact>
 
-        <Link href="/inscription" className="mt-4 text-center text-sm font-semibold text-brand-muted underline underline-offset-2">
-          Pas encore de compte ? Créer un compte
+        <Link href="/connexion" className="mt-4 text-center text-sm font-semibold text-brand-muted underline underline-offset-2">
+          Se connecter par numéro whatsapp
         </Link>
       </form>
     </main>
