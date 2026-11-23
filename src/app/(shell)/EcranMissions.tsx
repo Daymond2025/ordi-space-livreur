@@ -1,5 +1,6 @@
 "use client";
 
+import { useNotifications } from "@/components/notifications/Notifications";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -207,7 +208,8 @@ export function EcranMissions() {
   const [onglet, setOnglet] = useState<Onglet>("tous");
   const [chargementDispo, setChargementDispo] = useState(false);
   const [chargementAction, setChargementAction] = useState(false);
-  const [notificationsNonLues, setNotificationsNonLues] = useState(false);
+  const { nonLues, version } = useNotifications();
+  const notificationsNonLues = nonLues > 0;
 
   function recharger() {
     if (!token) return;
@@ -220,13 +222,11 @@ export function EcranMissions() {
       apiFetch<Pagination<MissionLivreur>>("/livraisons?per_page=50", { token }),
       apiFetch<PaiementsLivreur>("/moi/paiements", { token }),
       apiFetch<ProfilLivreur>("/moi/profil", { token }),
-      apiFetch<Pagination<{ lu: boolean }>>("/moi/notifications", { token }),
     ])
-      .then(([missionsPage, paiementsData, profilData, notificationsPage]) => {
+      .then(([missionsPage, paiementsData, profilData]) => {
         setMissions(missionsPage.data);
         setPaiements(paiementsData);
         setProfil(profilData);
-        setNotificationsNonLues(notificationsPage.data.some((n) => !n.lu));
       })
       .catch(() => setMissions((m) => m ?? []));
   }
@@ -239,14 +239,12 @@ export function EcranMissions() {
       apiFetch<Pagination<MissionLivreur>>("/livraisons?per_page=50", { token }),
       apiFetch<PaiementsLivreur>("/moi/paiements", { token }),
       apiFetch<ProfilLivreur>("/moi/profil", { token }),
-      apiFetch<Pagination<{ lu: boolean }>>("/moi/notifications", { token }),
     ])
-      .then(([missionsPage, paiementsData, profilData, notificationsPage]) => {
+      .then(([missionsPage, paiementsData, profilData]) => {
         if (annule) return;
         setMissions(missionsPage.data);
         setPaiements(paiementsData);
         setProfil(profilData);
-        setNotificationsNonLues(notificationsPage.data.some((n) => !n.lu));
       })
       .catch(() => {
         if (!annule) setMissions([]);
@@ -261,6 +259,13 @@ export function EcranMissions() {
   // le statut d'une mission ailleurs peut réafficher un instantané figé
   // (bfcache) au lieu des vraies données — voir useRefetchOnFocus.
   useRefetchOnFocus(rechargerTout);
+
+  // Nouvelle notification (mission assignée, livraison disponible…) : la liste
+  // se met à jour sans attendre que le livreur revienne sur l'écran.
+  useEffect(() => {
+    if (version > 0) rechargerTout();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [version]);
 
   const idMissionActive = useMemo(() => {
     if (!missions) return null;
@@ -291,7 +296,7 @@ export function EcranMissions() {
       // missions" — voir PushNotificationService::envoyerAuxLivreursDisponibles()
       // côté backend (déclenché quand un fournisseur envoie une commande à
       // un livreur). Échec silencieux, jamais bloquant.
-      if (valeur) sAbonnerAuxPush(token);
+      if (valeur) sAbonnerAuxPush(token, true);
     } catch {
       setProfil((p) => (p ? { ...p, disponible: !valeur } : p));
     } finally {
@@ -314,6 +319,9 @@ export function EcranMissions() {
 
   return (
     <div className="flex h-full flex-col overflow-y-auto bg-[#f2f5fa]">
+      {/* Fond blanc dès le haut de l'écran : le header (coins arrondis) est
+          posé dessus, sans bande grise entre le header et le fond blanc. */}
+      <div className="shrink-0 bg-white pb-2">
       <div className="relative shrink-0" style={{ height: 184 }}>
         {/* Peinte AVANT le dégradé bleu (qui la recouvre en partie) — même
             technique que "Mes paiements" : le blanc n'apparaît que là où le
@@ -399,8 +407,12 @@ export function EcranMissions() {
           </button>
         ))}
       </div>
+      </div>
 
-      <div className="flex flex-col gap-2.5 px-4 pb-6 pt-8">
+      {/* Ligne de séparation sur toute la largeur de l'écran. */}
+      <div className="h-px w-full shrink-0 bg-brand-line" />
+
+      <div className="flex flex-col gap-2.5 px-4 pb-6 pt-4">
         {missionsFiltrees === null ? (
           <p className="py-10 text-center text-sm text-brand-muted">Chargement…</p>
         ) : missionsFiltrees.length === 0 ? (
