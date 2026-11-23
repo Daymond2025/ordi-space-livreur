@@ -176,6 +176,9 @@ export function EcranPaiements() {
 
   return (
     <div className="flex h-full flex-col overflow-y-auto bg-[#f2f5fa]">
+      {/* Fond blanc dès le haut de l'écran : le header (coins arrondis) est
+          posé dessus, sans bande grise entre le header et le fond blanc. */}
+      <div className="shrink-0 bg-white pb-4">
       <div className="relative shrink-0" style={{ height: 184 }}>
         <div
           className="absolute inset-x-0"
@@ -236,10 +239,12 @@ export function EcranPaiements() {
           }}
         />
       ) : null}
+      </div>
 
-      <div className="mx-4 mt-3 h-px bg-brand-line" />
+      {/* Ligne de séparation sur toute la largeur de l'écran. */}
+      <div className="h-px w-full shrink-0 bg-brand-line" />
 
-      <div className="flex flex-col gap-2.5 px-4 pb-6 pt-10">
+      <div className="flex flex-col gap-2.5 px-4 pb-6 pt-4">
         {donnees === null ? (
           <p className="py-10 text-center text-sm text-brand-muted">Chargement…</p>
         ) : donnees.missions.data.length === 0 ? (
