@@ -161,8 +161,8 @@ export function EcranConnexionEmail() {
         <>
           <BoutonRetour onClick={retourConnexion} label="Retour à la connexion" />
 
-          <h2 className="mt-3 text-2xl font-black text-slate-900">Vérification</h2>
-          <p className="mt-1.5 text-sm text-slate-500">
+          <h2 className="mt-3 text-center text-3xl font-black text-slate-900">Vérification</h2>
+          <p className="mt-1.5 text-center text-sm text-slate-500">
             Saisis le code à {LONGUEUR_CODE} chiffres envoyé à{" "}
             <span className="font-bold text-[var(--auth-accent)]">{email.trim() || "ton e-mail"}</span>.
           </p>
@@ -173,7 +173,7 @@ export function EcranConnexionEmail() {
 
           <MessageErreur erreur={erreur} />
 
-          <BoutonAuth type="button" onClick={() => validerCode()} disabled={code.length < LONGUEUR_CODE} chargement={chargement} succes={succes} className="mt-8">
+          <BoutonAuth type="button" onClick={() => validerCode()} disabled={code.length < LONGUEUR_CODE} chargement={chargement} succes={succes} className="mt-10">
             Valider le code
           </BoutonAuth>
 
@@ -190,8 +190,8 @@ export function EcranConnexionEmail() {
         </>
       ) : (
         <form onSubmit={onSoumettreConnexion} className="flex flex-1 flex-col" noValidate>
-          <h2 className="text-2xl font-black text-slate-900">Connexion</h2>
-          <p className="mt-1.5 text-sm text-slate-500">Entre tes identifiants pour accéder à ton espace.</p>
+          <h2 className="text-center text-3xl font-black text-slate-900">Connexion</h2>
+          <p className="mt-1.5 text-center text-sm text-slate-500">Entre tes identifiants pour accéder à ton espace.</p>
 
           <div className="mt-7 flex flex-col gap-4">
             <ChampFlottant
@@ -233,9 +233,8 @@ export function EcranConnexionEmail() {
             Mot de passe oublié ?
           </Link>
 
-          <div className="min-h-6 flex-1" />
 
-          <BoutonAuth type="submit" chargement={chargement} succes={succes} className="mt-8">
+          <BoutonAuth type="submit" chargement={chargement} succes={succes} className="mt-10">
             Se connecter
           </BoutonAuth>
 
