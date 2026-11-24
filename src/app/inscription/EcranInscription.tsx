@@ -1,15 +1,16 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { ApiRequestError } from "@/lib/api";
-import { ChampAuth } from "@/components/auth/ChampAuth";
 import { ChampDocument } from "@/components/auth/ChampDocument";
-import { BoutonAuthCompact } from "@/components/auth/BoutonAuthCompact";
-import { ChevronLeftIcon } from "@/components/icons";
+import { CadreAuth } from "@/components/auth/kit/CadreAuth";
+import { ChampFlottant, IconePersonne } from "@/components/auth/kit/ChampFlottant";
+import { BoutonAuth, BoutonRetour, Etapes, MessageErreur } from "@/components/auth/kit/BoutonAuth";
+import type { HumeurMascotte } from "@/components/auth/kit/MascotteVivante";
+import { THEME_AUTH } from "@/components/auth/kit/themeAuth";
 
 /**
  * Numéro inconnu à l'écran /connexion — finalise la création du compte par
@@ -33,6 +34,9 @@ export function EcranInscription() {
   const [erreursDocuments, setErreursDocuments] = useState<Record<string, string>>({});
   const [erreur, setErreur] = useState<string | null>(null);
   const [chargement, setChargement] = useState(false);
+  const [compteurErreurs, setCompteurErreurs] = useState(0);
+  const [focus, setFocus] = useState(false);
+  const r = THEME_AUTH.repliques;
 
   // Efface l'erreur d'un document dès qu'il est choisi — sinon le contour
   // rouge et le message restent affichés jusqu'à la prochaine soumission,
@@ -57,10 +61,12 @@ export function EcranInscription() {
     setErreursDocuments({});
 
     if (!telephone) {
+      setCompteurErreurs((n) => n + 1);
       setErreur("Numéro manquant — recommence depuis l'écran de connexion.");
       return;
     }
     if (!nom.trim()) {
+      setCompteurErreurs((n) => n + 1);
       setErreur("Le nom est requis.");
       return;
     }
@@ -72,6 +78,7 @@ export function EcranInscription() {
     if (!photoCarteGrise) documentsManquants.photo_carte_grise = "Photo de la carte grise requise.";
     if (Object.keys(documentsManquants).length > 0) {
       setErreursDocuments(documentsManquants);
+      setCompteurErreurs((n) => n + 1);
       setErreur("Ajoute les documents manquants pour continuer.");
       return;
     }
@@ -101,6 +108,7 @@ export function EcranInscription() {
         if (Object.keys(documentsEnErreur).length > 0) setErreursDocuments(documentsEnErreur);
       }
 
+      setCompteurErreurs((n) => n + 1);
       const premierMessageDeChamp = e instanceof ApiRequestError ? Object.values(e.fields ?? {})[0]?.[0] : undefined;
       setErreur(premierMessageDeChamp ?? (e instanceof ApiRequestError ? e.message : "Impossible de créer le compte. Vérifiez votre connexion internet."));
     } finally {
@@ -108,66 +116,98 @@ export function EcranInscription() {
     }
   }
 
+  const nbDocuments = [photo, photoPermis, photoCni, photoCarteGrise].filter(Boolean).length;
+  let humeur: HumeurMascotte = "repos";
+  let bulle = r.nom;
+  if (erreur) {
+    humeur = "erreur";
+    bulle = r.erreur;
+  } else if (nom.trim() && nbDocuments === 4) {
+    humeur = "saisie";
+    bulle = "Dossier complet, on démarre ? 🏁";
+  } else if (nbDocuments > 0) {
+    humeur = "saisie";
+    bulle = `${nbDocuments}/4 documents, continue ! 📄`;
+  } else if (focus) {
+    humeur = "saisie";
+  }
+
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col bg-white pb-10 md:my-6 md:min-h-[calc(100dvh-3rem)] md:max-h-[calc(100dvh-3rem)] md:overflow-y-auto md:rounded-[2rem] md:shadow-2xl md:shadow-slate-900/15 md:ring-1 md:ring-black/5">
-      <div className="bg-gradient-brand-blue relative flex flex-col items-center rounded-b-[2.5rem] px-6 pb-6 pt-6 text-white">
-        <button type="button" onClick={() => router.back()} className="absolute left-4 top-6 flex h-9 w-9 items-center justify-center rounded-full bg-white/20">
-          <ChevronLeftIcon className="h-5 w-5" />
-        </button>
-
-        <h1 className="mt-2 text-center text-2xl font-extrabold leading-snug">
-          Crée ton compte
-          <br />
-          Livreur
-        </h1>
-
-        <Image
-          src="/images/mascotte.png"
-          alt=""
-          width={275}
-          height={274}
-          className="mt-2 h-[130px] w-[131px] object-contain"
-          priority
-        />
-      </div>
-
-      <form onSubmit={onSoumettre} className="relative -mt-6 flex flex-1 flex-col rounded-t-[2rem] bg-white px-6 pb-8 pt-5">
-        <div className="mx-auto mb-6 h-1.5 w-12 rounded-full bg-brand-line" />
-
-        <h2 className="text-center text-lg font-bold text-brand-ink">Tes informations</h2>
-        {telephone ? (
-          <p className="mt-1 text-center text-sm font-semibold text-[color:var(--brand-blue-end)]">+{telephone.replace(/^\+/, "")}</p>
-        ) : null}
-
-        <div className="mt-6 flex flex-col gap-3.5">
-          <ChampAuth type="text" value={nom} onChange={setNom} placeholder="Nom" autoComplete="family-name" autoFocus />
-          <ChampAuth type="text" value={prenom} onChange={setPrenom} placeholder="Prénom (optionnel)" autoComplete="given-name" />
+    <CadreAuth humeur={humeur} bulle={bulle} declencheur={compteurErreurs}>
+      <form onSubmit={onSoumettre} className="flex flex-1 flex-col" noValidate>
+        <div className="flex items-center gap-3">
+          <BoutonRetour onClick={() => router.back()} />
+          <div className="flex-1">
+            <Etapes etapes={["Numéro", "Dossier", "Code"]} active={1} />
+          </div>
         </div>
 
-        <h2 className="mt-8 text-center text-lg font-bold text-brand-ink">Tes documents</h2>
-        <p className="mt-1.5 text-center text-xs text-brand-muted">
-          Requis pour vérifier ton identité, puisque tu géreras de l&apos;argent en espèces à la livraison.
+        <h2 className="mt-5 text-2xl font-black text-slate-900">Crée ton compte</h2>
+        <p className="mt-1.5 text-sm text-slate-500">
+          Espace Livreur
+          {telephone ? <span className="font-bold text-[var(--auth-accent)]"> · +{telephone.replace(/^\+/, "")}</span> : null}
         </p>
 
-        <div className="mt-4 flex flex-col gap-2.5">
-          <ChampDocument
-            label="Photo de profil"
-            fichier={photo}
-            onChange={choisirDocument("photo", setPhoto)}
-            erreur={erreursDocuments.photo}
+        <div className="mt-6 flex flex-col gap-4">
+          <ChampFlottant
+            type="text"
+            label="Nom"
+            value={nom}
+            onChange={(v) => {
+              setNom(v);
+              setErreur(null);
+            }}
+            icone={<IconePersonne />}
+            valide={nom.trim().length > 1}
+            enErreur={Boolean(erreur) && !nom.trim()}
+            declencheurErreur={compteurErreurs}
+            autoComplete="family-name"
+            onFocus={() => setFocus(true)}
+            onBlur={() => setFocus(false)}
           />
+          <ChampFlottant
+            type="text"
+            label="Prénom (optionnel)"
+            value={prenom}
+            onChange={setPrenom}
+            icone={<IconePersonne />}
+            autoComplete="given-name"
+            onFocus={() => setFocus(true)}
+            onBlur={() => setFocus(false)}
+          />
+        </div>
+
+        <div className="mt-8 flex items-end justify-between gap-3">
+          <div>
+            <h3 className="text-lg font-black text-slate-900">Tes documents</h3>
+            <p className="mt-1 text-xs text-slate-500">
+              Requis pour vérifier ton identité, puisque tu géreras de l&apos;argent en espèces à la livraison.
+            </p>
+          </div>
+          <span
+            className={`shrink-0 rounded-full px-3 py-1 text-xs font-extrabold tabular-nums ${
+              nbDocuments === 4 ? "bg-emerald-100 text-emerald-700" : "bg-orange-100 text-orange-700"
+            }`}
+          >
+            {nbDocuments}/4
+          </span>
+        </div>
+        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-200">
+          <div
+            className="h-full rounded-full bg-[linear-gradient(90deg,var(--auth-accent),var(--auth-accent-fin))] transition-all duration-500"
+            style={{ width: `${(nbDocuments / 4) * 100}%` }}
+          />
+        </div>
+
+        <div className="mt-4 flex flex-col gap-2.5">
+          <ChampDocument label="Photo de profil" fichier={photo} onChange={choisirDocument("photo", setPhoto)} erreur={erreursDocuments.photo} />
           <ChampDocument
             label="Permis de conduire"
             fichier={photoPermis}
             onChange={choisirDocument("photo_permis", setPhotoPermis)}
             erreur={erreursDocuments.photo_permis}
           />
-          <ChampDocument
-            label="Carte d'identité (CNI)"
-            fichier={photoCni}
-            onChange={choisirDocument("photo_cni", setPhotoCni)}
-            erreur={erreursDocuments.photo_cni}
-          />
+          <ChampDocument label="Carte d'identité (CNI)" fichier={photoCni} onChange={choisirDocument("photo_cni", setPhotoCni)} erreur={erreursDocuments.photo_cni} />
           <ChampDocument
             label="Carte grise"
             sousLabel="Du véhicule que tu utiliseras"
@@ -177,16 +217,16 @@ export function EcranInscription() {
           />
         </div>
 
-        {erreur ? <p className="mt-4 text-center text-xs text-rose-500">{erreur}</p> : null}
+        <MessageErreur erreur={erreur} />
 
-        <BoutonAuthCompact chargement={chargement} texteChargement="Création…" className="mt-6">
-          créer mon compte
-        </BoutonAuthCompact>
+        <BoutonAuth type="submit" chargement={chargement} texteChargement="Création…" className="mt-8">
+          Créer mon compte
+        </BoutonAuth>
 
-        <Link href="/connexion" className="mt-4 text-center text-sm font-semibold text-brand-muted underline underline-offset-2">
+        <Link href="/connexion" className="mt-4 text-center text-sm font-bold text-[var(--auth-accent)] underline-offset-2 hover:underline">
           Déjà un compte ? Se connecter
         </Link>
       </form>
-    </main>
+    </CadreAuth>
   );
 }
