@@ -1,8 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { ChevronLeftIcon, PhoneFilledIcon, PinIcon, TruckIcon } from "@/components/icons";
 import { formaterPrix, type MissionLivreur } from "@/lib/types";
+import { useRetour } from "@/lib/navigation";
 
 const DEGRADE_HEADER = "linear-gradient(90deg, #0077FF 0%, #00BFFF 100%)";
 const DEGRADE_LIVREUR = "linear-gradient(273.52deg, #FFCC00 -3.09%, #FF7800 98.47%)";
@@ -60,7 +60,8 @@ export function EcranSuiviLivraison({
   mission: MissionLivreur;
   onArrive: () => void;
 }) {
-  const router = useRouter();
+  // Retour fiable même si la page a été ouverte directement (notification, lien, appli rouverte) — voir lib/navigation.ts.
+  const retour = useRetour("/");
   const telephone = mission.telephone_client;
 
   return (
@@ -68,7 +69,7 @@ export function EcranSuiviLivraison({
       <div className="relative z-10 flex shrink-0 items-center gap-3 px-4 py-3 text-white" style={{ background: DEGRADE_HEADER }}>
         <button
           type="button"
-          onClick={() => router.back()}
+          onClick={retour}
           aria-label="Retour"
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/20"
         >

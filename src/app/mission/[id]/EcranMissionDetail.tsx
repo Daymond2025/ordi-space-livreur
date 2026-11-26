@@ -15,6 +15,7 @@ import { EcranCommencerLivraison } from "./EcranCommencerLivraison";
 import { EcranSuiviLivraison } from "./EcranSuiviLivraison";
 import { EcranModePaiement } from "./EcranModePaiement";
 import { lienWebSur } from "@/lib/liens";
+import { useRetour } from "@/lib/navigation";
 
 /**
  * Détail d'une mission — chaîne d'écrans pilotée par de vrais statuts
@@ -29,6 +30,8 @@ import { lienWebSur } from "@/lib/liens";
 export function EcranMissionDetail({ livraisonId }: { livraisonId: number }) {
   const { token } = useAuth();
   const router = useRouter();
+  // Retour fiable même si la page a été ouverte directement (notification, lien, appli rouverte) — voir lib/navigation.ts.
+  const retour = useRetour("/");
 
   const [mission, setMission] = useState<MissionLivreur | null>(null);
   const [chargement, setChargement] = useState(false);
@@ -105,7 +108,7 @@ export function EcranMissionDetail({ livraisonId }: { livraisonId: number }) {
       <EcranNouvelleMission
         mission={mission}
         chargement={chargement}
-        onRefuser={() => router.back()}
+        onRefuser={retour}
         onAccepter={() =>
           executer(() =>
             apiFetch(`/livraisons/${livraisonId}/${mission.statut_livraison === "en_attente_livreur" ? "affecter" : "accepter"}`, {
@@ -133,7 +136,7 @@ export function EcranMissionDetail({ livraisonId }: { livraisonId: number }) {
       <EcranCommencerLivraison
         mission={mission}
         chargement={chargement}
-        onAnnuler={() => router.back()}
+        onAnnuler={retour}
         onCommencer={() => executer(() => apiFetch(`/livraisons/${livraisonId}/demarrer-livraison`, { method: "POST", token: token! }))}
       />
     );
@@ -149,7 +152,7 @@ export function EcranMissionDetail({ livraisonId }: { livraisonId: number }) {
   }
 
   if (mission.statut_livraison === "en_cours" && mission.arrivee_le) {
-    return <EcranModePaiement mission={mission} onRetour={() => router.back()} onRetourAccueil={() => router.push("/")} />;
+    return <EcranModePaiement mission={mission} onRetour={retour} onRetourAccueil={() => router.push("/")} />;
   }
 
   const telephone = mission.telephone_client;
@@ -159,7 +162,7 @@ export function EcranMissionDetail({ livraisonId }: { livraisonId: number }) {
       <div className="bg-gradient-brand-blue shrink-0 rounded-b-[30px] px-4 pb-6 pt-4 text-white">
         <button
           type="button"
-          onClick={() => router.back()}
+          onClick={retour}
           aria-label="Retour"
           className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20"
         >

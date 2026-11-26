@@ -10,6 +10,7 @@ import { CameraIcon, ChevronLeftIcon, ChevronRightIcon, DocumentIcon, HeadsetIco
 import { InterrupteurDisponibilite } from "@/components/space/InterrupteurDisponibilite";
 import { SelecteurVehicule } from "@/components/compte/SelecteurVehicule";
 import { useRefetchOnFocus } from "@/lib/useRefetchOnFocus";
+import { useRetour } from "@/lib/navigation";
 
 const DEGRADE_HEADER = "linear-gradient(90deg, #0077FF 0%, #00BFFF 100%)";
 
@@ -50,6 +51,8 @@ function LigneMenu({ icone, iconeClasse, label, onClick }: { icone: React.ReactN
 export function EcranCompte() {
   const { user, token, logout } = useAuth();
   const router = useRouter();
+  // Retour fiable même si la page a été ouverte directement (notification, lien, appli rouverte) — voir lib/navigation.ts.
+  const retour = useRetour("/");
   const [profil, setProfil] = useState<ProfilLivreur | null>(null);
   const [paiements, setPaiements] = useState<PaiementsLivreur | null>(null);
   const [chargementDispo, setChargementDispo] = useState(false);
@@ -162,7 +165,7 @@ export function EcranCompte() {
 
         <button
           type="button"
-          onClick={() => router.back()}
+          onClick={retour}
           aria-label="Retour"
           className="absolute left-4 z-10 flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 text-white"
           style={{ top: 26 }}
